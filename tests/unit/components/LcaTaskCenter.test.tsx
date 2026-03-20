@@ -98,6 +98,16 @@ jest.mock('antd', () => {
   const Typography = {
     Text: ({ children }: any) => <span>{children}</span>,
   };
+  const theme = {
+    useToken: () => ({
+      token: {
+        colorFillSecondary: '#fafafa',
+        colorTextTertiary: '#595959',
+        colorPrimary: '#1677ff',
+        colorSuccess: '#52c41a',
+      },
+    }),
+  };
 
   return {
     __esModule: true,
@@ -111,6 +121,7 @@ jest.mock('antd', () => {
     Tag,
     Tooltip,
     Typography,
+    theme,
   };
 });
 
@@ -128,7 +139,7 @@ describe('LcaTaskCenter', () => {
     fireEvent.click(screen.getByRole('button', { name: 'open-lca-task-center' }));
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByText('LCA Tasks')).toBeInTheDocument();
+    expect(screen.getByText('Task Center')).toBeInTheDocument();
     expect(screen.getByTestId('empty')).toHaveTextContent('No tasks');
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear finished' }));
