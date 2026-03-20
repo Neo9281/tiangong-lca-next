@@ -30,6 +30,7 @@ export default {
   'teams.notification.team.invite.reject': 'Reject',
   'teams.members.role.empty': 'No information',
   'teams.members.role.invited': 'Invited',
+  'teams.members.notInAnyTeam': 'You are not a member of any team',
   'teams.logo.typeError': 'Only image files can be uploaded!',
   'teams.logo.uploadSuccess': 'Upload successful!',
   'teams.logo.uploadError': 'Upload failed!',

@@ -29,6 +29,7 @@ export default {
   'teams.notification.team.invite.reject': '拒绝',
   'teams.members.role.empty': '暂无信息',
   'teams.members.role.invited': '邀请中',
+  'teams.members.notInAnyTeam': '您不是任何团队的成员',
   'teams.logo.typeError': '只能上传图片文件!',
   'teams.logo.uploadSuccess': '上传成功!',
   'teams.logo.uploadError': '上传失败!',

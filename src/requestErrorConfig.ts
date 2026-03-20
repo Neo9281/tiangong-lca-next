@@ -1,5 +1,6 @@
 ﻿import type { RequestOptions } from '@@/plugin-request/request';
 import type { RequestConfig } from '@umijs/max';
+import { getIntl } from '@umijs/max';
 import { message, notification } from 'antd';
 
 // 错误处理方案： 错误类型
@@ -18,6 +19,12 @@ interface ResponseStructure {
   errorMessage?: string;
   showType?: ErrorShowType;
 }
+
+const formatRequestMessage = (
+  id: string,
+  defaultMessage: string,
+  values?: Record<string, string | number>,
+) => getIntl().formatMessage({ id, defaultMessage }, values);
 
 /**
  * @name 错误处理
@@ -72,15 +79,26 @@ export const errorConfig: RequestConfig = {
       } else if (error.response) {
         // Axios 的错误
         // 请求成功发出且服务器也响应了状态码，但状态代码超出了 2xx 的范围
-        message.error(`Response status:${error.response.status}`);
+        message.error(
+          formatRequestMessage('app.request.responseStatus', 'Response status: {status}', {
+            status: error.response.status,
+          }),
+        );
       } else if (error.request) {
         // 请求已经成功发起，但没有收到响应
         // \`error.request\` 在浏览器中是 XMLHttpRequest 的实例，
         // 而在node.js中是 http.ClientRequest 的实例
-        message.error('None response! Please retry.');
+        message.error(
+          formatRequestMessage(
+            'app.request.noneResponseRetry',
+            'No response received. Please retry.',
+          ),
+        );
       } else {
         // 发送请求时出了点问题
-        message.error('Request error, please retry.');
+        message.error(
+          formatRequestMessage('app.request.errorRetry', 'Request error, please retry.'),
+        );
       }
     },
   },
@@ -101,7 +119,7 @@ export const errorConfig: RequestConfig = {
       const { data } = response as unknown as ResponseStructure;
 
       if (data?.success === false) {
-        message.error('请求失败！');
+        message.error(formatRequestMessage('app.request.failed', 'Request failed!'));
       }
       return response;
     },

@@ -17,6 +17,44 @@ const loadLeafLocaleModules = (locale: 'en-US' | 'zh-CN') => {
     }));
 };
 
+const stripComments = (source: string) =>
+  source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+
+const loadExplicitMessageIds = () => {
+  const srcDir = path.join(process.cwd(), 'src');
+  const messageIds = new Set<string>();
+
+  const walk = (currentPath: string) => {
+    const stat = fs.statSync(currentPath);
+    if (stat.isDirectory()) {
+      const baseName = path.basename(currentPath);
+      if (baseName === 'locales' || baseName === 'node_modules') {
+        return;
+      }
+
+      fs.readdirSync(currentPath).forEach((child) => walk(path.join(currentPath, child)));
+      return;
+    }
+
+    if (!/\.(ts|tsx|js|jsx)$/.test(currentPath)) {
+      return;
+    }
+
+    const source = stripComments(fs.readFileSync(currentPath, 'utf8'));
+
+    for (const match of source.matchAll(/\bid\s*[:=]\s*['"]([^'"]+)['"]/g)) {
+      const messageId = match[1];
+      if (messageId.includes('.')) {
+        messageIds.add(messageId);
+      }
+    }
+  };
+
+  walk(srcDir);
+
+  return [...messageIds].sort();
+};
+
 describe('locale bundles', () => {
   it('merges every English leaf locale module into the top-level bundle', () => {
     const englishLeafModules = loadLeafLocaleModules('en-US');
@@ -61,6 +99,15 @@ describe('locale bundles', () => {
     ];
 
     sharedKeys.forEach((key) => {
+      expect(enUS[key]).toBeDefined();
+      expect(zhCN[key]).toBeDefined();
+    });
+  });
+
+  it('keeps explicit message ids used in src aligned between English and Chinese bundles', () => {
+    const explicitMessageIds = loadExplicitMessageIds();
+
+    explicitMessageIds.forEach((key) => {
       expect(enUS[key]).toBeDefined();
       expect(zhCN[key]).toBeDefined();
     });

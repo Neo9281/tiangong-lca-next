@@ -27,6 +27,7 @@ export default {
   'component.allTeams.drawer.public': 'Public Display',
   'component.allTeams.drawer.notPublic': 'Not Public Display',
   'component.allTeams.logo.title': 'Team Logo',
+  'component.allTeams.drawer.title.view': 'View Team',
   'component.allTeams.drawer.title.edit': 'Edit Team',
   'component.allTeams.drawer.title.copy': 'Copy Team',
   'component.allTeams.drawer.title.createVersion': 'Create Version',

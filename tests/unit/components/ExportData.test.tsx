@@ -1,4 +1,5 @@
 import ExportData from '@/components/ExportData';
+import type { TidasPackageRootTable } from '@/services/general/api';
 import { submitTidasPackageExportTask } from '@/services/tidasPackage/taskCenter';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { message } from 'antd';
@@ -68,14 +69,20 @@ jest.mock('@/services/tidasPackage/taskCenter', () => ({
   submitTidasPackageExportTask: jest.fn(),
 }));
 
+type ExportDataTestProps = {
+  tableName: TidasPackageRootTable;
+  id: string;
+  version: string;
+};
+
 const mockedSubmitTidasPackageExportTask = jest.mocked(submitTidasPackageExportTask);
 const mockMessage = message as unknown as MockMessage;
 
-const baseProps = {
+const baseProps: ExportDataTestProps = {
   tableName: 'flows',
   id: 'test-id',
   version: 'v00000001',
-} as const;
+};
 
 type RenderProps = {
   tableName: 'flows' | 'lifecyclemodels';
