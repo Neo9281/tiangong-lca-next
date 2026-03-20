@@ -46,6 +46,7 @@ const STORAGE_SCHEMA_VERSION = 1;
 const STORAGE_TTL_MS = 72 * 60 * 60 * 1000;
 const POLL_INTERVAL_MS = 1500;
 const POLL_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+const POLL_TRANSIENT_ERROR_RETRY_LIMIT = 5;
 
 let taskSequence = 0;
 let tasks: TidasPackageBackgroundTask[] = [];
@@ -392,6 +393,7 @@ async function pollTask(taskId: string, jobId: string): Promise<void> {
 
   activePollers.add(taskId);
   const startedAt = Date.now();
+  let consecutiveErrors = 0;
   try {
     while (Date.now() - startedAt <= POLL_TIMEOUT_MS) {
       const task = tasks.find((item) => item.id === taskId);
@@ -401,15 +403,28 @@ async function pollTask(taskId: string, jobId: string): Promise<void> {
 
       const { data, error } = await getTidasPackageJobApi(jobId);
       if (error || !data?.ok) {
+        consecutiveErrors += 1;
+        if (consecutiveErrors >= POLL_TRANSIENT_ERROR_RETRY_LIMIT) {
+          upsertTask(taskId, {
+            phase: 'failed',
+            state: 'failed',
+            message: 'Export task failed',
+            error: error?.message ?? 'Failed to load TIDAS package job status',
+          });
+          return;
+        }
+
         upsertTask(taskId, {
-          phase: 'failed',
-          state: 'failed',
-          message: 'Export task failed',
-          error: error?.message ?? 'Failed to load TIDAS package job status',
+          phase: task.phase === 'submitting' ? 'queued' : task.phase,
+          state: 'running',
+          message: `Connection interrupted while checking export status, retrying (${consecutiveErrors}/${POLL_TRANSIENT_ERROR_RETRY_LIMIT})`,
+          error: undefined,
         });
-        return;
+        await delay(POLL_INTERVAL_MS);
+        continue;
       }
 
+      consecutiveErrors = 0;
       applyJobToTask(taskId, data);
       if (data.status === 'failed' || data.status === 'stale') {
         return;
