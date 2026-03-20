@@ -77,7 +77,13 @@ const baseProps = {
   version: 'v00000001',
 } as const;
 
-const renderComponent = (props: Partial<typeof baseProps> = {}) =>
+type RenderProps = {
+  tableName: 'flows' | 'lifecyclemodels';
+  id: string;
+  version: string;
+};
+
+const renderComponent = (props: Partial<RenderProps> = {}) =>
   render(<ExportData {...baseProps} {...props} />);
 
 const clickExportButton = () => {

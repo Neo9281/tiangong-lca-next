@@ -77,6 +77,7 @@ jest.mock('@/services/ilcd/cache', () => ({
 jest.mock('@/services/general/api', () => ({
   getDataDetail: jest.fn(),
   getTeamIdByUserId: jest.fn(),
+  normalizeLangPayloadForSave: jest.fn(),
   resolveFunctionInvokeError: jest.fn(async (error: any) => error),
 }));
 
@@ -88,7 +89,8 @@ const { supabase } = jest.requireMock('@/services/supabase');
 const { classificationToString, genClassificationZH, getLangText, jsonToList } =
   jest.requireMock('@/services/general/util');
 const { getCachedClassificationData } = jest.requireMock('@/services/ilcd/cache');
-const { getDataDetail, getTeamIdByUserId } = jest.requireMock('@/services/general/api');
+const { getDataDetail, getTeamIdByUserId, normalizeLangPayloadForSave } =
+  jest.requireMock('@/services/general/api');
 const { genSourceJsonOrdered } = jest.requireMock('@/services/sources/util');
 const { createSource: mockCreateSource } = jest.requireMock('@tiangong-lca/tidas-sdk');
 
@@ -98,6 +100,10 @@ describe('Sources API Service (src/services/sources/api.ts)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     supabase.auth.getSession.mockResolvedValue(mockSession);
+    normalizeLangPayloadForSave.mockImplementation(async (payload: any) => ({
+      payload,
+      validationError: undefined,
+    }));
     // Setup default SDK mock behavior
     mockCreateSource.mockReturnValue({
       validateEnhanced: jest.fn().mockReturnValue({ success: true }),

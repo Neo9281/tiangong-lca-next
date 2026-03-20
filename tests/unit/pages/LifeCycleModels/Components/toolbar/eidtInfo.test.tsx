@@ -3,7 +3,6 @@ import ToolbarEditInfo from '@/pages/LifeCycleModels/Components/toolbar/eidtInfo
 import { act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
-import { toText } from '../../../../../helpers/nodeToText';
 import { render, screen, waitFor } from '../../../../../helpers/testUtils';
 
 jest.mock('@tiangong-lca/tidas-sdk', () => ({
@@ -95,6 +94,10 @@ jest.mock('@/components/ValidationIssueModal', () => ({
   __esModule: true,
   showValidationIssueModal: jest.fn(),
 }));
+
+const { showValidationIssueModal: mockShowValidationIssueModal } = jest.requireMock(
+  '@/components/ValidationIssueModal',
+);
 
 jest.mock('@/style/custom.less', () => ({
   __esModule: true,
@@ -456,6 +459,7 @@ jest.mock('@tiangong-lca/tidas-sdk', () => ({
 
 beforeEach(() => {
   Object.values(mockAntdMessage).forEach((fn) => fn.mockReset());
+  mockShowValidationIssueModal.mockReset();
   latestRefsDrawerProps = null;
   mockCheckReferences.mockReset();
   mockCheckRequiredFields.mockReset().mockReturnValue({ checkResult: true, tabName: '' });
@@ -934,12 +938,18 @@ describe('ToolbarEditInfo', () => {
       },
     });
     mockGetProcessDetail.mockResolvedValue({ data: {} });
-    mockDealModel.mockImplementation((_modelDetail: any, _unReview: any[], underReview: any[]) => {
-      underReview.push({
-        '@refObjectId': 'flow-1',
-        '@version': '1.0',
-        '@type': 'flow data set',
-      });
+    const validationIssues = [{ code: 'underReview' }];
+    mockBuildValidationIssues.mockReturnValueOnce(validationIssues as any);
+    mockCheckReferences.mockResolvedValue({
+      findProblemNodes: () => [
+        {
+          '@refObjectId': 'flow-1',
+          '@version': '1.0',
+          '@type': 'flow data set',
+          versionUnderReview: true,
+          underReviewVersion: '1.0',
+        },
+      ],
     });
 
     render(<ToolbarEditInfo ref={ref} {...baseProps} />);
@@ -950,28 +960,36 @@ describe('ToolbarEditInfo', () => {
       result = await ref.current?.handleCheckData('review', nodes, [{}]);
     });
 
-    expect(mockAntdMessage.error).toHaveBeenCalledWith(
-      'Referenced data is under review, cannot initiate another review',
+    expect(mockShowValidationIssueModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Review submission blocked',
+        issues: validationIssues,
+      }),
     );
+    expect(mockAntdMessage.error).not.toHaveBeenCalled();
     expect(result.checkResult).toBe(false);
   });
 
   it('blocks review when referenced process or model versions are already under review', async () => {
     const ref = React.createRef<any>();
+    const validationIssues = [{ code: 'versionUnderReview' }, { code: 'versionUnderReview' }];
     mockGetLifeCycleModelDetail.mockResolvedValue(createModelDetail());
     mockGetProcessDetail.mockResolvedValue({});
+    mockBuildValidationIssues.mockReturnValueOnce(validationIssues as any);
     mockCheckReferences.mockResolvedValue({
       findProblemNodes: () => [
         {
           '@refObjectId': 'model-ref',
           '@version': '1.0',
           '@type': 'lifeCycleModel data set',
+          versionUnderReview: true,
           underReviewVersion: '2.0',
         },
         {
           '@refObjectId': 'process-ref',
           '@version': '3.0',
           '@type': 'process data set',
+          versionUnderReview: true,
           underReviewVersion: '4.0',
         },
       ],
@@ -985,21 +1003,23 @@ describe('ToolbarEditInfo', () => {
       result = await ref.current?.handleCheckData('review', nodes, [{}]);
     });
 
-    const renderedMessage = toText(mockAntdMessage.error.mock.calls.at(-1)?.[0]);
-    expect(renderedMessage).toContain(
-      'The model data set {id} already has version {underReviewVersion} under review.',
+    expect(mockShowValidationIssueModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Review submission blocked',
+        issues: validationIssues,
+      }),
     );
-    expect(renderedMessage).toContain(
-      'The process data set {id} already has version {underReviewVersion} under review.',
-    );
+    expect(mockAntdMessage.error).not.toHaveBeenCalled();
     expect(result.checkResult).toBe(false);
     expect(result.problemNodes).toHaveLength(2);
   });
 
   it('blocks review when referenced process or model versions are older than published TG versions', async () => {
     const ref = React.createRef<any>();
+    const validationIssues = [{ code: 'versionIsInTg' }, { code: 'versionIsInTg' }];
     mockGetLifeCycleModelDetail.mockResolvedValue(createModelDetail());
     mockGetProcessDetail.mockResolvedValue({});
+    mockBuildValidationIssues.mockReturnValueOnce(validationIssues as any);
     mockCheckReferences.mockResolvedValue({
       findProblemNodes: () => [
         {
@@ -1025,10 +1045,13 @@ describe('ToolbarEditInfo', () => {
       result = await ref.current?.handleCheckData('review', nodes, [{}]);
     });
 
-    const renderedMessage = toText(mockAntdMessage.error.mock.calls.at(-1)?.[0]);
-    expect(renderedMessage).toContain('lower than the published version');
-    expect(renderedMessage).toContain('model {id}');
-    expect(renderedMessage).toContain('process {id}');
+    expect(mockShowValidationIssueModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Review submission blocked',
+        issues: validationIssues,
+      }),
+    );
+    expect(mockAntdMessage.error).not.toHaveBeenCalled();
     expect(result.checkResult).toBe(false);
     expect(result.problemNodes).toHaveLength(2);
   });
@@ -1133,15 +1156,12 @@ describe('ToolbarEditInfo', () => {
 
   it('surfaces process-instance validation issues separately from tab-level errors', async () => {
     const ref = React.createRef<any>();
-    const tidasSdk = jest.requireMock('@tiangong-lca/tidas-sdk');
-    tidasSdk.createLifeCycleModel.mockImplementationOnce(() => ({
-      validateEnhanced: jest.fn(() => ({
-        success: false,
-        error: {
-          issues: [{ path: ['lifeCycleModelDataSet', 'processInstance'] }],
-        },
-      })),
-    }));
+    const validationIssues = [{ code: 'sdkInvalid' }];
+    mockValidateDatasetWithSdk.mockReturnValueOnce({
+      success: false,
+      issues: [{ path: ['lifeCycleModelDataSet', 'processInstance'] }],
+    } as any);
+    mockBuildValidationIssues.mockReturnValueOnce(validationIssues as any);
     mockGetLifeCycleModelDetail.mockResolvedValue({
       success: true,
       data: {
@@ -1169,7 +1189,13 @@ describe('ToolbarEditInfo', () => {
       result = await ref.current?.handleCheckData('checkData', nodes, [{}]);
     });
 
-    expect(mockAntdMessage.error).toHaveBeenCalledWith('Please complete the process instance data');
+    expect(mockShowValidationIssueModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Data validation issues',
+        issues: validationIssues,
+      }),
+    );
+    expect(mockAntdMessage.error).not.toHaveBeenCalled();
     expect(result.checkResult).toBe(false);
   });
 
@@ -1220,15 +1246,12 @@ describe('ToolbarEditInfo', () => {
   it('shows tab-level validation errors and reopens the drawer for correction', async () => {
     jest.useFakeTimers();
     const ref = React.createRef<any>();
-    const tidasSdk = jest.requireMock('@tiangong-lca/tidas-sdk');
-    tidasSdk.createLifeCycleModel.mockImplementationOnce(() => ({
-      validateEnhanced: jest.fn(() => ({
-        success: false,
-        error: {
-          issues: [{ path: ['lifeCycleModelDataSet', 'lifeCycleModelInformation'] }],
-        },
-      })),
-    }));
+    const validationIssues = [{ code: 'sdkInvalid' }];
+    mockValidateDatasetWithSdk.mockReturnValueOnce({
+      success: false,
+      issues: [{ path: ['lifeCycleModelDataSet', 'lifeCycleModelInformation'] }],
+    } as any);
+    mockBuildValidationIssues.mockReturnValueOnce(validationIssues as any);
     mockGetLifeCycleModelDetail.mockResolvedValue(createModelDetail());
     mockGetProcessDetail.mockResolvedValue({});
     mockDealModel.mockImplementation(
@@ -1277,9 +1300,18 @@ describe('ToolbarEditInfo', () => {
     });
     jest.useRealTimers();
 
-    expect(mockAntdMessage.error).toHaveBeenCalledWith(
-      'lifeCycleModelInformation，administrativeInformation，modellingAndValidation，technology：Data check failed!',
+    expect(mockBuildValidationIssues).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sdkInvalidTabNames: ['lifeCycleModelInformation'],
+      }),
     );
+    expect(mockShowValidationIssueModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Data validation issues',
+        issues: validationIssues,
+      }),
+    );
+    expect(mockAntdMessage.error).not.toHaveBeenCalled();
     expect(
       await screen.findByRole('dialog', { name: 'Model base infomation' }),
     ).toBeInTheDocument();
@@ -1426,15 +1458,12 @@ describe('ToolbarEditInfo', () => {
 
   it('falls back to a generic data-check error when validation issues have a non-string tab path', async () => {
     const ref = React.createRef<any>();
-    const tidasSdk = jest.requireMock('@tiangong-lca/tidas-sdk');
-    tidasSdk.createLifeCycleModel.mockImplementationOnce(() => ({
-      validateEnhanced: jest.fn(() => ({
-        success: false,
-        error: {
-          issues: [{ path: ['lifeCycleModelDataSet', { tab: 'invalid' }] }],
-        },
-      })),
-    }));
+    const validationIssues = [{ code: 'sdkInvalid' }];
+    mockValidateDatasetWithSdk.mockReturnValueOnce({
+      success: false,
+      issues: [{ path: ['lifeCycleModelDataSet', { tab: 'invalid' }] }],
+    } as any);
+    mockBuildValidationIssues.mockReturnValueOnce(validationIssues as any);
     mockGetLifeCycleModelDetail.mockResolvedValue(createModelDetail());
     mockGetProcessDetail.mockResolvedValue({});
     mockCheckReferences.mockResolvedValue({ findProblemNodes: () => [] });
@@ -1447,7 +1476,13 @@ describe('ToolbarEditInfo', () => {
       result = await ref.current?.handleCheckData('checkData', nodes, [{}]);
     });
 
-    expect(mockAntdMessage.error).toHaveBeenCalledWith('Data check failed!');
+    expect(mockShowValidationIssueModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Data validation issues',
+        issues: validationIssues,
+      }),
+    );
+    expect(mockAntdMessage.error).not.toHaveBeenCalled();
     expect(result.checkResult).toBe(false);
   });
 

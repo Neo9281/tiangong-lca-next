@@ -60,11 +60,15 @@ const { getCachedClassificationData: mockGetCachedClassificationData } =
 jest.mock('@/services/general/api', () => ({
   getDataDetail: jest.fn(),
   getTeamIdByUserId: jest.fn(),
+  normalizeLangPayloadForSave: jest.fn(),
   resolveFunctionInvokeError: jest.fn(async (error: any) => error),
 }));
 
-const { getDataDetail: mockGetDataDetail, getTeamIdByUserId: mockGetTeamIdByUserId } =
-  jest.requireMock('@/services/general/api');
+const {
+  getDataDetail: mockGetDataDetail,
+  getTeamIdByUserId: mockGetTeamIdByUserId,
+  normalizeLangPayloadForSave: mockNormalizeLangPayloadForSave,
+} = jest.requireMock('@/services/general/api');
 
 class MockQuery<T = any> {
   public calls = {
@@ -200,6 +204,10 @@ beforeEach(() => {
   mockGetCachedClassificationData.mockResolvedValue([]);
   mockGetTeamIdByUserId.mockResolvedValue(null);
   mockGetDataDetail.mockResolvedValue({ data: null });
+  mockNormalizeLangPayloadForSave.mockImplementation(async (payload: any) => ({
+    payload,
+    validationError: undefined,
+  }));
 
   mockAuthGetSession.mockResolvedValue({
     data: {

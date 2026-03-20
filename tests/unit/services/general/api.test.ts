@@ -424,12 +424,13 @@ describe('getRefData', () => {
     const result = await generalApi.getRefData(sampleId, sampleVersion, 'flows', 'team-2');
 
     expect(result).toEqual({
-      data: {
+      data: expect.objectContaining({
         stateCode: 200,
         json: { source: 'team-2' },
         ruleVerification: 'pending',
         userId: 'user-2',
-      },
+        teamId: 'team-2',
+      }),
       success: true,
     });
   });
@@ -464,12 +465,13 @@ describe('getRefData', () => {
     );
 
     expect(result).toEqual({
-      data: {
+      data: expect.objectContaining({
         stateCode: 100,
         json: { source: 'first' },
         ruleVerification: 'ok',
         userId: 'user-1',
-      },
+        teamId: 'team-1',
+      }),
       success: true,
     });
   });

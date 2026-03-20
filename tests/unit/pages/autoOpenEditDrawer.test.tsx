@@ -135,6 +135,7 @@ jest.mock('@ant-design/pro-components', () => {
     __esModule: true,
     PageContainer,
     ProTable,
+    TableDropdown: () => <div data-testid='table-dropdown' />,
   };
 });
 

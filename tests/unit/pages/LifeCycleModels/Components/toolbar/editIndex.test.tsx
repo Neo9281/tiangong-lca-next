@@ -1081,6 +1081,7 @@ describe('ToolbarEdit', () => {
         'checkData',
         expect.any(Array),
         expect.any(Array),
+        { silent: false },
       ),
     );
   });
