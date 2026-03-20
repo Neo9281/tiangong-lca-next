@@ -23,6 +23,8 @@ const mockContributeSource = jest.fn();
 const mockGetDataSource = jest.fn(() => 'my');
 const mockGetLang = jest.fn(() => 'en');
 const mockGetLangText = jest.fn((value: any) => value?.[0]?.['#text'] ?? 'Team title');
+const mockIsDataUnderReview = jest.fn(() => false);
+const mockAttachStateCodesToRows = jest.fn(async (_tableName: string, rows: any[]) => rows);
 const mockGetRoleByUserId = jest.fn();
 const mockGetTeamById = jest.fn();
 const mockGetUnitGroupTableAll = jest.fn();
@@ -41,6 +43,7 @@ jest.mock('umi', () => ({
 
 jest.mock('@/services/general/api', () => ({
   __esModule: true,
+  attachStateCodesToRows: (...args: any[]) => mockAttachStateCodesToRows(...args),
   contributeSource: (...args: any[]) => mockContributeSource(...args),
 }));
 
@@ -49,6 +52,7 @@ jest.mock('@/services/general/util', () => ({
   getDataSource: (...args: any[]) => mockGetDataSource(...args),
   getLang: (...args: any[]) => mockGetLang(...args),
   getLangText: (...args: any[]) => mockGetLangText(...args),
+  isDataUnderReview: (...args: any[]) => mockIsDataUnderReview(...args),
 }));
 
 jest.mock('@/services/roles/api', () => ({
