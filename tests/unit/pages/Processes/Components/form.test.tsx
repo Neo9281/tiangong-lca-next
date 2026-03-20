@@ -13,6 +13,7 @@ const toText = (node: any): string => {
 };
 
 const proTableInstances: any[] = [];
+const mockProTableInstanceIndexByActionRef = new Map<any, number>();
 const formListInstances: Record<string, any> = {};
 
 const mockProcessExchangeCreate = jest.fn();
@@ -210,7 +211,15 @@ jest.mock('@ant-design/pro-components', () => {
       }
     }, [actionRef]);
     React.useEffect(() => {
-      proTableInstances.push(props);
+      const key = actionRef ?? Symbol('pro-table');
+      const existingIndex = mockProTableInstanceIndexByActionRef.get(key);
+      if (existingIndex === undefined) {
+        mockProTableInstanceIndexByActionRef.set(key, proTableInstances.length);
+        proTableInstances.push(props);
+        return;
+      }
+
+      proTableInstances[existingIndex] = props;
     }, [props]);
 
     const sampleRow = {
@@ -391,6 +400,7 @@ describe('ProcessForm component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     proTableInstances.length = 0;
+    mockProTableInstanceIndexByActionRef.clear();
     Object.keys(formListInstances).forEach((key) => delete formListInstances[key]);
     mockRefCheckContextValue = { refCheckData: [] };
     mockSourceSelectForm.mockClear();

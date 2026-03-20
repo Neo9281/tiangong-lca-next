@@ -1,5 +1,4 @@
 import ExportData from '@/components/ExportData';
-import type { TidasPackageRootTable } from '@/services/general/api';
 import { submitTidasPackageExportTask } from '@/services/tidasPackage/taskCenter';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { message } from 'antd';
@@ -70,7 +69,7 @@ jest.mock('@/services/tidasPackage/taskCenter', () => ({
 }));
 
 type ExportDataTestProps = {
-  tableName: TidasPackageRootTable;
+  tableName: 'flows' | 'lifecyclemodels';
   id: string;
   version: string;
 };
