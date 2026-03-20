@@ -1,6 +1,6 @@
+import { formatRuntimeMessage } from '@/locales/runtime';
 import { supabase } from '@/services/supabase';
 import { FunctionRegion } from '@supabase/supabase-js';
-import { getIntl } from '@umijs/max';
 import { message } from 'antd';
 import { SortOrder } from 'antd/lib/table/interface';
 import { genFlowName } from '../flows/util';
@@ -922,10 +922,7 @@ export async function contributeSource(tableName: string, id: string, version: s
     return result?.data;
   } else {
     message.error(
-      getIntl().formatMessage({
-        id: 'teams.members.notInAnyTeam',
-        defaultMessage: 'You are not a member of any team',
-      }),
+      formatRuntimeMessage('teams.members.notInAnyTeam', 'You are not a member of any team'),
     );
   }
   return {

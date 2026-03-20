@@ -1,6 +1,6 @@
-﻿import type { RequestOptions } from '@@/plugin-request/request';
+﻿import { formatRuntimeMessage } from '@/locales/runtime';
+import type { RequestOptions } from '@@/plugin-request/request';
 import type { RequestConfig } from '@umijs/max';
-import { getIntl } from '@umijs/max';
 import { message, notification } from 'antd';
 
 // 错误处理方案： 错误类型
@@ -24,7 +24,7 @@ const formatRequestMessage = (
   id: string,
   defaultMessage: string,
   values?: Record<string, string | number>,
-) => getIntl().formatMessage({ id, defaultMessage }, values);
+) => formatRuntimeMessage(id, defaultMessage, values);
 
 /**
  * @name 错误处理

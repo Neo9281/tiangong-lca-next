@@ -6,6 +6,8 @@
 import { errorConfig } from '@/requestErrorConfig';
 import { message, notification } from 'antd';
 
+const mockGetLocale = jest.fn(() => 'en-US');
+
 jest.mock('antd', () => ({
   __esModule: true,
   message: {
@@ -15,6 +17,11 @@ jest.mock('antd', () => ({
   notification: {
     open: jest.fn(),
   },
+}));
+
+jest.mock('umi', () => ({
+  __esModule: true,
+  getLocale: () => mockGetLocale(),
 }));
 
 type MessageMock = {
@@ -57,6 +64,8 @@ const notificationMock = notification as unknown as NotificationMock;
 describe('requestErrorConfig (src/requestErrorConfig.ts)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetLocale.mockReset();
+    mockGetLocale.mockReturnValue('en-US');
   });
 
   const createBizError = (showType?: number, errorMessage = 'failed', errorCode = 400) => {
@@ -160,13 +169,13 @@ describe('requestErrorConfig (src/requestErrorConfig.ts)', () => {
 
     errorHandler(error as any, {});
 
-    expect(messageMock.error).toHaveBeenCalledWith('Response status:503');
+    expect(messageMock.error).toHaveBeenCalledWith('Response status: 503');
   });
 
   it('shows request missing message when request exists but no response', () => {
     errorHandler({ request: {} } as any, {});
 
-    expect(messageMock.error).toHaveBeenCalledWith('None response! Please retry.');
+    expect(messageMock.error).toHaveBeenCalledWith('No response received. Please retry.');
   });
 
   it('shows generic error message for unknown errors', () => {
@@ -191,7 +200,7 @@ describe('requestErrorConfig (src/requestErrorConfig.ts)', () => {
     const result = callResponseInterceptor(responseInterceptor, response as any);
 
     expect(result).toBe(response);
-    expect(messageMock.error).toHaveBeenCalledWith('请求失败！');
+    expect(messageMock.error).toHaveBeenCalledWith('Request failed!');
   });
 
   it('passes through successful responses silently', () => {
