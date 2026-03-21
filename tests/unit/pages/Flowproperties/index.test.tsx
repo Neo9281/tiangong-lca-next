@@ -29,6 +29,8 @@ const mockGetLangText = jest.fn((value: any) => {
   if (typeof value === 'string') return value;
   return value?.['#text'] ?? 'Team title';
 });
+const mockIsDataUnderReview = jest.fn(() => false);
+const mockAttachStateCodesToRows = jest.fn(async (_tableName: string, rows: any[]) => rows);
 const mockGetTeamById = jest.fn();
 const mockGetUnitData = jest.fn();
 const mockMessage = {
@@ -60,6 +62,7 @@ jest.mock('@/services/general/util', () => ({
   getLang: (...args: any[]) => mockGetLang(...args),
   getLangText: (...args: any[]) => mockGetLangText(...args),
   getUnitData: (...args: any[]) => mockGetUnitData(...args),
+  isDataUnderReview: (...args: any[]) => mockIsDataUnderReview(...args),
 }));
 
 jest.mock('@/services/teams/api', () => ({
@@ -69,6 +72,7 @@ jest.mock('@/services/teams/api', () => ({
 
 jest.mock('@/services/general/api', () => ({
   __esModule: true,
+  attachStateCodesToRows: (...args: any[]) => mockAttachStateCodesToRows(...args),
   contributeSource: (...args: any[]) => mockContributeSource(...args),
 }));
 

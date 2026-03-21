@@ -26,6 +26,8 @@ const mockContributeLifeCycleModel = jest.fn();
 const mockGetDataSource = jest.fn(() => 'my');
 const mockGetLang = jest.fn(() => 'en');
 const mockGetLangText = jest.fn((value: any) => value?.[0]?.['#text'] ?? 'Team title');
+const mockIsDataUnderReview = jest.fn(() => false);
+const mockAttachStateCodesToRows = jest.fn(async (_tableName: string, rows: any[]) => rows);
 const mockGetTeamById = jest.fn();
 let latestRequest: any = null;
 
@@ -55,11 +57,17 @@ jest.mock('@/services/lifeCycleModels/api', () => ({
   contributeLifeCycleModel: (...args: any[]) => mockContributeLifeCycleModel(...args),
 }));
 
+jest.mock('@/services/general/api', () => ({
+  __esModule: true,
+  attachStateCodesToRows: (...args: any[]) => mockAttachStateCodesToRows(...args),
+}));
+
 jest.mock('@/services/general/util', () => ({
   __esModule: true,
   getDataSource: (...args: any[]) => mockGetDataSource(...args),
   getLang: (...args: any[]) => mockGetLang(...args),
   getLangText: (...args: any[]) => mockGetLangText(...args),
+  isDataUnderReview: (...args: any[]) => mockIsDataUnderReview(...args),
 }));
 
 jest.mock('@/services/teams/api', () => ({
