@@ -1,8 +1,8 @@
+import { formatRuntimeMessage } from '@/locales/runtime';
 import { supabase } from '@/services/supabase';
 import { FunctionRegion } from '@supabase/supabase-js';
 import { message } from 'antd';
 import { SortOrder } from 'antd/lib/table/interface';
-import { getLocale } from 'umi';
 import { genFlowName } from '../flows/util';
 import {
   classificationToString,
@@ -922,7 +922,7 @@ export async function contributeSource(tableName: string, id: string, version: s
     return result?.data;
   } else {
     message.error(
-      getLocale() === 'zh-CN' ? '您不是任何团队的成员' : 'You are not a member of any team',
+      formatRuntimeMessage('teams.members.notInAnyTeam', 'You are not a member of any team'),
     );
   }
   return {

@@ -20,11 +20,23 @@ jest.mock('react-countup', () => ({
 
 jest.mock('umi', () => ({
   __esModule: true,
-  FormattedMessage: ({ defaultMessage, id }: any) => defaultMessage ?? id,
-  useIntl: () => ({
-    locale: mockLocale,
-    formatMessage: ({ defaultMessage, id }: any) => defaultMessage ?? id,
-  }),
+  ...(() => {
+    const enMessages = require('@/locales/en-US').default;
+    const zhMessages = require('@/locales/zh-CN').default;
+
+    const formatMessage = ({ defaultMessage, id }: any) => {
+      const messages = mockLocale.startsWith('zh') ? zhMessages : enMessages;
+      return messages[id] ?? defaultMessage ?? id;
+    };
+
+    return {
+      FormattedMessage: ({ defaultMessage, id }: any) => formatMessage({ defaultMessage, id }),
+      useIntl: () => ({
+        locale: mockLocale,
+        formatMessage,
+      }),
+    };
+  })(),
 }));
 
 jest.mock('@/services/general/util', () => ({

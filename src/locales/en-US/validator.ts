@@ -13,6 +13,9 @@ export default {
   'validator.CASNumber.pattern': 'CAS number must be X-X-X, where the first part is 2-7 digits, the second part is 2 digits, and the third part is 1 digit!',
 
   'validator.pages.contact.email.pattern': 'The input is not valid E-mail!',
+  'validator.pages.contact.WWWAddress.invalid': 'Please input a valid website address!',
+  'validator.Year.empty': 'Recommended to fill in to enhance data detail and usability!',
+  'validator.Year.pattern': 'Please input a valid year (for example: 2023)',
 
   'validator.NullableString.pattern': 'Length cannot exceed 500 characters characters and may be empty!',
 

@@ -40,6 +40,7 @@ export default {
   'pages.FlowProperties.view.type': '类型',
   'pages.FlowProperties.view.uri': '统一资源标识符',
   'pages.FlowProperties.view.shortDescription': '简述',
+  'pages.flowproperties.deleteMessage': '您确定要删除此数据吗？',
   'pages.flowproperties.deleteMessage.areyousureyouwanttodeletethisdata?': '您确定要删除此数据吗？',
   'pages.FlowProperties.view.flowPropertiesInformation.quantitativeReference': '量值参考',
 

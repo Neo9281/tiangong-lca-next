@@ -39,6 +39,7 @@ export default {
   'pages.FlowProperties.view.type': 'Type',
   'pages.FlowProperties.view.uri': 'URI',
   'pages.FlowProperties.view.shortDescription': 'Short description',
+  'pages.flowproperties.deleteMessage': 'Are you sure you want to delete this data?',
   'pages.flowproperties.deleteMessage.areyousureyouwanttodeletethisdata?': 'Are you sure you want to delete this data?',
   'pages.FlowProperties.view.flowPropertiesInformation.quantitativeReference': 'Quantitative reference',
 
